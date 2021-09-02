@@ -5,19 +5,25 @@ class Graph {
     this.nodes_count = nodes.length;
     this.node_dim = 30;
   }
-
+  add_node(node) {
+    this.nodes.push(node);
+  }
+  add_edge(edge) {
+    this.edges.push(edge);
+  }
   
 }
 
 
 
 class Node {
-    constructor(x , y) {
+    constructor(x , y , id) {
       this.x = x;
       this.y = y;
       this.edges = [];
       this.hex_color = "#ffffff";
       this.part_of_tree = true;
+      this.id = id;
     }
     equals(rhs) {
       if(typeof(rhs) != Node) {
@@ -48,7 +54,7 @@ class Node {
   }
   
   class Button {
-    constructor(button_width , button_height , button_x , button_y , text , fun) {
+    constructor(button_width , button_height , button_x , button_y , text , fun , arg) {
       this.button_height =button_height ;
       this.button_width = button_width;
       this.button_x = button_x;
@@ -56,6 +62,7 @@ class Node {
       this.text = text;
       this.color = "grey";
       this.fun = fun;
+      this.arg = arg;
     }
     contains(x , y) {
       return (this.button_x <= x &&
@@ -66,12 +73,13 @@ class Node {
     click() {
       if(this.color == "grey") this.color = "red";
       else this.color = "grey";
-      this.fun;
+      if(this.arg) this.fun(this.arg)
+      else this.fun();
     }
     render() {
       fill(this.color);
       rect(this.button_x , this.button_y, this.button_width , this.button_height)
       fill(0);
-      text(this.text, this.button_x + (this.button_width * 0.3) , this.button_y + (this.button_height * 0.6))
+      text(this.text , this.button_x  , this.button_y + 5, this.button_width , this.button_height)
     }
   }

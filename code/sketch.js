@@ -9,6 +9,9 @@ let graph;
 let source;
 let destination;
 let menu_up = false;
+let pending_edge_from = null;
+let settings_page;
+let current_letter = "A";
 function equal_nodes(n1 , n2) {
   // console.log(n1.x == n2.x && n1.y == n2.y);
   return n1.x == n2.x && n1.y == n2.y;
@@ -91,14 +94,19 @@ function print_table(table) {
 }
 
 function setup() {
-  frameRate(5);
+  frameRate(10);
   resizeCanvas(720 , 720);
   background(124);
   stroke(0);
-  graph = get_random_graph(2);
+  graph = get_random_graph(10);
+  settings_page = new Settings();
   // dijkstra_algorithm(graph.nodes[0])
-  buttons.push(new Button(80 , 25 , width * 0.85 , height * 0.95 , "RUN"))
+  buttons.push(new Button(80 , 25 , width * 0.85 , height * 0.95 , "RUN" , console.log , "null"));
+  buttons.push(new Button(80 , 25 , width * 0.64 , height * 0.95 , "SETTINGS" , open_settings , null))
   create_drop_down();
+}
+function open_settings() {
+  settings_page.toggle_page();
 }
 
 function create_drop_down() {
@@ -111,39 +119,39 @@ function create_drop_down() {
   sel.option('grape');
   sel.selected('Dijkstra');
   sel.changed(mySelectEvent);
-  sel.position(width * 0.9 ,  height * 0.9)
+  sel.position(width * 0.9 ,  height * 0.9);
 }
 
 function get_random_graph(nodes_count) {
-  let min_x =  width/-2;
-  let min_y = height/-2;
-  let max_x = width/2;
-  let max_y = height/2;
+  let min_x =  0;width/-2;
+  let min_y = 0;height/-2;
+  let max_x = width;width/2;
+  let max_y = height;height/2;
   let nodes = [];
   let edges = [];
   for(let i = 0; i < nodes_count; i++) {
-    let temp = new Node(Math.floor(Math.random() * (max_x - min_x) + min_x) , Math.floor(Math.random() * (max_y - min_y) + min_y));
+    let temp = new Node(Math.floor(Math.random() * (max_x - min_x) + min_x) , Math.floor(Math.random() * (max_y - min_y) + min_y) , current_letter);
     let found = nodes.find(node => node.contains(temp.x , temp.y));
     if(found) i--;
-    else nodes.push(temp);
+    
+    else {
+      nodes.push(temp);
+      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1)
+    }
   }
   nodes.map(node => {
     for(let i = 0; i < Math.floor(Math.random() * 5 + 1); i++) {
       let next_neighbour = nodes[Math.floor(Math.random() * nodes_count)];
       if(node.edges.find(e => e.node_b && equal_nodes(e.node_b , next_neighbour) || equal_nodes(node , next_neighbour))) 
         continue;
-      if(i > 0) continue;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       new_edge = new Edge(node , next_neighbour , Math.floor((Math.sqrt(Math.pow(node.x - next_neighbour.x, 2)) + (Math.pow(node.y - next_neighbour.y, 2)))));
 
-
-
       node.edges.push(new_edge);
-      edges.push(new_edge)
+      edges.push(new_edge);
     }
   })
   edges = edges.filter(edge => edge.weight > 0);
-  return new Graph(nodes , edges)
+  return new Graph(nodes , edges);
 }
 
 
@@ -154,10 +162,18 @@ function mySelectEvent() {
 }
 
 function handle_menu(node , action_selected) {
-  console.log('here')
   if(!node) {
     if(action_selected == "new graph") {
       graph = get_random_graph(10);
+    }
+    if(action_selected == "add node") {
+      let node = new Node(width / 2 , node_dim , current_letter);
+      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1)
+      graph.add_node(node);
+    }
+    if(action_selected == "clear") {
+      graph = new Graph([] , []);
+      current_letter = "A";
     }
   }
   if(action_selected == "delete") {
@@ -175,10 +191,19 @@ function handle_menu(node , action_selected) {
     graph.nodes.splice(graph.nodes.indexOf(node) , 1);
   }
   else if(action_selected == "destination") {
+    if(source && equal_nodes(source , node))
+      source = null;
     destination = node;
   }
   else if(action_selected == "source") {
+    if(destination && equal_nodes(destination , node)) 
+      destination = null;
     source = node;
+  }
+  else if(action_selected == "reset") {
+    if(destination && equal_nodes(destination , node)) 
+      destination = null;
+    else source = null;
   }
 }
 
@@ -189,18 +214,23 @@ if (document.addEventListener) {
   document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
     if(menu_up) return;
+    if(pending_edge_from) {
+      pending_edge_from = null;
+      return;
+    }
     menu_up = true;
-    // alert("You've tried to open context menu"); //here you draw your own menu
     let found_node = graph.nodes.find(node => node.contains(mouseX , mouseY));
     if(found_node) {
       
       background(200);
       sel = createSelect();
       sel.position(found_node.x, found_node.y);
+      sel.option("")
       sel.option("..");
-      sel.option('source');
-      sel.option('destination');
-      sel.option('delete');
+      sel.option("source");
+      sel.option("destination");
+      sel.option("delete");
+      sel.option("reset")
       sel.changed(() => {handle_menu(found_node , sel.value()); sel.remove(); menu_up = false;});
       sel.position(found_node.x, found_node.y)
 
@@ -210,73 +240,41 @@ if (document.addEventListener) {
       sel = createSelect();
       sel.position(mouseX, mouseY);
       sel.option("");
-      // sel.option("...");
-      sel.option('new graph');
-      sel.selected("...")
+      sel.option("...");
+      sel.option("new graph");
+      sel.option("add node");
+      sel.option("clear");
       sel.changed(() => {handle_menu(null , sel.value()); sel.remove(); menu_up = false;});
       sel.position(mouseX, mouseY)
     }
   }, false);
 } 
 
-
 function draw() {
-  translate(width/2, height/2); 
-  scale(1, -1);
   background(124);
-  // ellipse(0,0,10,10);
-  // text("hi" , 10 , 10)
+  if(settings_page.current_page) {
+    settings_page.render();
+    return;
+  }
   draw_edges(graph.edges);
   draw_nodes(graph.nodes);
   draw_pointers(graph.edges);
-  // draw_run_button();
   buttons.map(button => button.render());
-
-
- 
 }
+
 function draw_pointers(edges) {
   for(let i = 0; i < edges.length; i++) {
-
-
-
-
-    fill(200);
-
-    let temp1 = trying(edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y , node_dim/2)
-    
-    // ellipse(temp1[0] , temp1[1] , 10 , 10);
-
-
-
-    
-    let x1 = 0;
-    let y1 = 5;
-    let x2 = -5;
-    let y2 = 0;
-    let x3 = 5;
-    let y3 = 0;
-    
-    // triangle(x1 , y1 , x2 , y2 , x3 , y3);
-    fill(0);
-
-    let tri = [[x1,y1] , [x2,y2] , [x3,y3]];
-    // console.log(tri)
-    // console.log(tri)
-    // line(x1 , y1 , -200 , 59)
-    // let deg = Math.atan2(edges[i].node_b.x , edges[i].node_b.y);//* (Math.PI/180)
+    let intersection_point = line_circle_intersection(edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y , node_dim/2);
+   
+    let tri = [[0 , 0] , [5 , -10] , [-5 , -10]];
     let m = (edges[i].node_b.y - edges[i].node_a.y) / (edges[i].node_b.x - edges[i].node_a.x);
-    let deg = Math.atan(m) + 1.5708
-    if(edges[i].node_a.y < edges[i].node_b.y) deg+=Math.PI;
-    // console.log(deg - 1.5708)
-    // console.log("M: " + (edges[i].node_b.y - edges[i].node_a.y) / (edges[i].node_b.x - edges[i].node_a.x))
-    // if(deg - 1.5708 < 0) deg += 1.5708;
-    if(m < 0) deg += 3.14
-    // console.log(Math.atan2(-1,-1))
+    let deg = Math.atan(m) + Math.PI/2;
+    if(edges[i].node_a.y < edges[i].node_b.y) deg += Math.PI;
+    if(m < 0) deg += Math.PI
+
     let cos_res = Math.cos(deg);
     let sin_res = Math.sin(deg);
-    // console.log(sin_res)
-    // tri.map(vector => {vector[0]})
+    //rotate
     let tx1 = cos_res * tri[0][0] - sin_res * tri[0][1];
     let ty1 = sin_res * tri[0][0] + cos_res * tri[0][1];
     let tx2 = cos_res * tri[1][0] - sin_res * tri[1][1];
@@ -289,82 +287,46 @@ function draw_pointers(edges) {
     tri[1][1] = ty2
     tri[2][0] = tx3
     tri[2][1] = ty3
-    tri.map(vector => {vector[0] += temp1[0]; vector[1] += temp1[1];})
-    // triangle(tx1 , ty1 , tx2 , ty2 , tx3 , ty3);
+
+    tri.map(vector => {vector[0] += intersection_point[0]; vector[1] += intersection_point[1];})
+
+    fill(0);
     triangle(tri[0][0] , tri[0][1] , tri[1][0] , tri[1][1] , tri[2][0] , tri[2][1]);
-
-
-
-    // console.log(mid);
-    // let mid = find_triangle_location(edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y)
-    // ellipse(mid[0] , mid[1] , 10 , 10);
-    
   }
-
 }
+
 function draw_edges(edges) {
   fill(0);
-  // edges = graph.edges;
   for(let i = 0; i < edges.length; i++) {
     if(edges[i].part_of_tree) {
       line(edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y);
       text(edges[i].weight , ((edges[i].node_a.x + edges[i].node_b.x) / 2) , ((edges[i].node_a.y + edges[i].node_b.y) / 2));
-
-
-
-
-
-
-
-
-
-
     }
-
-    // console.log(temp1)
-    //TODO calculate intersection between the edge and the second node and draw a rectangle there
-    // let res = get_point(edges[i].node_a.y , edges[i].node_b.y , edges[i].node_a.x , edges[i].node_b.x);
-    // triangle(((edges[i].node_a.x + edges[i].node_b.x) / 2) , ((edges[i].node_a.y + edges[i].node_b.y) / 2) , ((edges[i].node_a.x + 10+ edges[i].node_b.x) / 2) , ((edges[i].node_a.y +10+ edges[i].node_b.y) / 2) , ((edges[i].node_a.x + edges[i].node_b.x) / 2) , ((edges[i].node_a.y + edges[i].node_b.y) / 2))
+  }
+  if(pending_edge_from) {
+    line(pending_edge_from.x , pending_edge_from.y , mouseX , mouseY);
   }
 }
 
 
-function trying(x1 , y1 , x2 , y2 , r) {
-  //https://stackoverflow.com/questions/6091728/line-segment-circle-intersection
-  let m = (y2 - y1) / (x2 - x1);
-  let c = y2 - m * x2
-
-  let temp = (Math.sqrt(1 + Math.pow(m , 2)))
-  let res_x1 = x2 + r/temp;
-  let res_x2 = x2 + r/(temp * -1);
-
-  let res_y1 = m * res_x1 + c;
-  let res_y2 = m * res_x2 + c;
-
+function line_circle_intersection(x1 , y1 , x2 , y2 , r) {
+  //https://stackoverflow.com/questions/6091728/line-segment-circle-intersection________________//||
+  let m = (y2 - y1) / (x2 - x1);                                                                //||
+  let c = y2 - m * x2;                                                                          //||
+  //                                                                                            //||
+  let sec = (Math.sqrt(1 + Math.pow(m , 2)));                                                   //|| 
+  let res_x1 = x2 + r / sec;                                                                    //||
+  let res_x2 = x2 + r / (sec * -1);                                                             //||
+  //                                                                                            //|| 
+  let res_y1 = m * res_x1 + c;                                                                  //|| 
+  let res_y2 = m * res_x2 + c;                                                                  //||         
+  //____________________________________________________________________________________________//||
   let dist1 = Math.floor((Math.sqrt(Math.pow(x1 - res_x1, 2)) + (Math.pow(y1 - res_y1, 2))));
-  let dist2 = Math.floor((Math.sqrt(Math.pow(x1 - res_x2, 2)) + (Math.pow(y1 - res_y2, 2))))
-
+  let dist2 = Math.floor((Math.sqrt(Math.pow(x1 - res_x2, 2)) + (Math.pow(y1 - res_y2, 2))));
   if(dist1 > dist2)
    return [res_x2 , res_y2]
-
-
-  let trx1 = res_x1;
-  let try1 = res_y1;
-
-  //(10,10) 
-  //(10,0)
-  //(0,10)
-
-  let trx2 = (10 + res_x1) * m;
-  let try2 = res_y1 * m
-
-  let trx3 = res_x1 * m;
-  let try3 = (10 + res_y1) * m;
-  // triangle(trx1 , try1 , trx2 , try2 , trx3 , try3);
-
-  return [res_x1 , res_y1]
-
-
+  else 
+    return [res_x1 , res_y1]
 }
 
 function draw_nodes(nodes) {
@@ -374,29 +336,17 @@ function draw_nodes(nodes) {
       if(source && equal_nodes(source , nodes[i])) fill(0)
       if(destination && equal_nodes(destination , nodes[i])) fill("red");
       ellipse(nodes[i].x , nodes[i].y , node_dim , node_dim);
+      fill(0);
+      text(nodes[i].id , nodes[i].x , nodes[i].y)
     }
   }
 }
 
-function find_mid_point(x1 , y1 , x2 , y2) {
-  let x = (x1 + x2) / 2;
-  let y = (y1 + y2) / 2;
-  return [x , y];
-
-}
-function find_triangle_location(x1 , y1 , x2 , y2) {
-  let mid = find_mid_point(x1 , y1 , x2 , y2);
-    // let dis = Math.floor((Math.sqrt(Math.pow(mid[0] - x2 , 2)) + (Math.pow(mid[1] - y2, 2))))
-  for(let i = 0; i < 3; i++) {
-    mid = find_mid_point(mid[0] , mid[1] , x2 , y2);
-  }
-  return mid;
-
-}
 
 function mouseDragged() {
-  let x = mouseX - width/2;
-  let y =(mouseY - height/2) * -1;
+  let x = mouseX// - width/2;
+  let y =(mouseY)// - height/2) * -1;
+  if(settings_page.current_page) return;
   let node_on_move = graph.nodes.find(node => node.contains(x , y))
   if(node_on_move) {
     // if(mouseX < width && mouseX > 0 && mouseY > 0 && mouseY < height)
@@ -405,44 +355,48 @@ function mouseDragged() {
   }
 }
 function mouseClicked() {
-  let x = mouseX - width/2;
-  let y =(mouseY - height/2) * -1;
-  // console.log(x + " " + y)
+  let x = mouseX //- width/2;
+  let y =(mouseY) //- height/2) * -1;
   
   if(dragging) {
     dragging = false;
     return;
   }
-  let clicked_node = graph.nodes.find(node => node.contains(x , y));
-  if(clicked_node) {
-    // clicked_node.hex_color = 0;
+  if(settings_page.current_page) {
+    settings_page.mouseClicked(mouseX , mouseY);
+    return;
   }
+  let clicked_node = graph.nodes.find(node => node.contains(x , y));
   let clicked_button = buttons.find(button => button.contains(x , y));
-  if(clicked_button) clicked_button.click();
+  if(clicked_node) {
+    if(pending_edge_from) {
+      let edge = new Edge(pending_edge_from , clicked_node , Math.floor((Math.sqrt(Math.pow(clicked_node.x - pending_edge_from.x, 2)) + (Math.pow(clicked_node.y - pending_edge_from.y, 2)))))
+      graph.add_edge(edge);
+      pending_edge_from = null;
+      return;
+    }
+    pending_edge_from = clicked_node;
+  }
+  else if(clicked_button) clicked_button.click();
+  else if(pending_edge_from) {
+    let node = new Node(mouseX , mouseY , current_letter);
+    current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1)
+    let edge = new Edge(pending_edge_from , node , Math.floor((Math.sqrt(Math.pow(node.x - pending_edge_from.x, 2)) + (Math.pow(node.y - pending_edge_from.y, 2)))));
+    graph.add_node(node);
+    graph.add_edge(edge);
+    pending_edge_from = null;
+    return;
+  }
+}
+function doubleClicked() {
+  console.log("double")
+  input = createInput();
+  input.position(20, 65);
 }
 
 
-
-
-
-// function get_point(y1 , y2 , x1 , x2) {
-//   let m = (y1 - y2)/(x1 - x2);
-//   let c = y1 - m * x1;
-//   let x = x2 - node_dim;
-  
-//   let y = -1/ m * x + c
-
-//   let dy = Math.sqrt(Math.pow(3 , 2)/(Math.sqrt(m , 2) + 1))
-//   let dx = -1 * m * dy; 
-//   return [x  , y];
-// }
-// function get_perpendicular_line(x1 , y1 , x2 , y2) {
-  
-//   let m = (y1 - y2)/(x1 - x2);
-//   let c = y1 - m * x1;
-  
-//   // y = -1/mx + c
-//   //(midx , midy)
-//   //newc = midy - (-1/m)midx
-
-// }
+function find_mid_point(x1 , y1 , x2 , y2) {
+  let x = (x1 + x2) / 2;
+  let y = (y1 + y2) / 2;
+  return [x , y];
+}
