@@ -231,7 +231,7 @@ if (document.addEventListener) {
       sel.option("destination");
       sel.option("delete");
       sel.option("reset")
-      sel.changed(() => {handle_menu(found_node , sel.value()); sel.remove(); menu_up = false;});
+      sel.changed(() => {handle_menu(found_node , sel.value()); sel.remove(); menu_up = false; pending_edge_from = null});
       sel.position(found_node.x, found_node.y)
 
     }
@@ -244,7 +244,7 @@ if (document.addEventListener) {
       sel.option("new graph");
       sel.option("add node");
       sel.option("clear");
-      sel.changed(() => {handle_menu(null , sel.value()); sel.remove(); menu_up = false;});
+      sel.changed(() => {handle_menu(null , sel.value()); sel.remove(); menu_up = false; pending_edge_from = null;});
       sel.position(mouseX, mouseY)
     }
   }, false);
@@ -357,7 +357,6 @@ function mouseDragged() {
 function mouseClicked() {
   let x = mouseX //- width/2;
   let y =(mouseY) //- height/2) * -1;
-  if(mouseButton != LEFT) return;
   
   if(dragging) {
     dragging = false;
