@@ -357,6 +357,7 @@ function mouseDragged() {
 function mouseClicked() {
   let x = mouseX //- width/2;
   let y =(mouseY) //- height/2) * -1;
+  if(mouseButton != LEFT) return;
   
   if(dragging) {
     dragging = false;
