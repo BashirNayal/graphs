@@ -4,6 +4,9 @@ class Graph {
     this.edges = edges;
     this.nodes_count = nodes.length;
     this.node_dim = 30;
+    this.source = null;
+    this.destination = null;
+    this.directed = false;
   }
   add_node(node) {
     this.nodes.push(node);
@@ -21,6 +24,8 @@ class Node {
     this.hex_color = "#ffffff";
     this.part_of_tree = true;
     this.id = id;
+    this.out = [];
+    this.in = [];
   }
   equals(rhs) {
     if(typeof(rhs) != Node) {
@@ -35,7 +40,7 @@ class Node {
     this.y = new_y;
   }
   contains(x , y) {
-    return (Math.sqrt(Math.pow(this.x - x, 2) + (Math.pow(this.y - y, 2))) <= node_dim) || (this.x == x && this.y == y)
+    return (Math.sqrt(Math.pow(this.x - x, 2) + (Math.pow(this.y - y, 2))) <= node_dim/2) || (this.x == x && this.y == y)
   }
 }
 class Edge {
@@ -51,7 +56,7 @@ class Edge {
 }
   
 class Button {
-  constructor(button_width , button_height , button_x , button_y , text , fun , arg) {
+  constructor(button_width , button_height , button_x , button_y , text , fun , toggle , state) {
     this.button_height =button_height ;
     this.button_width = button_width;
     this.button_x = button_x;
@@ -59,7 +64,8 @@ class Button {
     this.text = text;
     this.color = "grey";
     this.fun = fun;
-    this.arg = arg;
+    this.toggle = toggle;
+    this.state = state;
   }
   contains(x , y) {
     return (this.button_x <= x &&
@@ -68,14 +74,19 @@ class Button {
       this.button_y + this.button_height >= y )
   }
   click() {
-    // if(this.color == "grey") this.color = "red";
-    // else this.color = "grey";
-    if(this.arg) this.fun(this.arg)
-    else this.fun();
+    if(this.toggle) {
+      this.state = !this.state;
+      return;
+    }
+
+    this.fun();
+  }
+  get_state() {
+    return this.state;
   }
   render() {
     fill(this.color);
-    if(this.contains(mouseX , mouseY)) fill("d64321");
+    if(this.contains(mouseX , mouseY) || this.state) fill("d64321");
     rect(this.button_x , this.button_y, this.button_width , this.button_height)
     fill(0);
     text(this.text , this.button_x  , this.button_y + 5, this.button_width , this.button_height)
