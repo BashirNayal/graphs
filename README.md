@@ -17,8 +17,12 @@ deleting an edge:
 -double clicking on the node that contains the edge as an 
 
 
-
+toggle res button:
+when dijkstra is calculated for instance, clicking this button will show the whole graph and not just the path between the source and destination node.
+changing the destination node will not invalidate dijkstra results and will adapt the view accordingly.
+Changin the source node, updating the weight of an edge, or adding or deleting a node or an edge will wipe out dijkstra results.
 
 
 //TODO fix text when there is two opposite arrows
 //TODO clean the in array of nodes when delting
+//

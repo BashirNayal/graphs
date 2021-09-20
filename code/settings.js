@@ -76,6 +76,7 @@ class InputForm {
         delete_indeces.map(i => this.node.out.splice(i, 1));
         this.input.map(e => e.remove())
         this.button.remove();
+        graph_updated();
     }
     remove() {
         this.input.map(e => e.remove())
