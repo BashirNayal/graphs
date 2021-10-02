@@ -1,3 +1,6 @@
+Github Pages link: https://bashirna yal.github.io/graphs/code/index.html
+
+
 Quickly construct a graph and test a few things in mind
 
 
@@ -23,6 +26,7 @@ changing the destination node will not invalidate dijkstra results and will adap
 Changin the source node, updating the weight of an edge, or adding or deleting a node or an edge will wipe out dijkstra results.
 
 
-//TODO fix text when there is two opposite arrows
 //TODO clean the in array of nodes when delting
-//
+
+//TODO when updating multuple/all edges to 0, not everything gets updated
+

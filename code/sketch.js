@@ -43,6 +43,7 @@ let update_graph_with_dijkstra_results = (table) => {
 
 let dijkstra_algorithm = (source) => {
   if(!source) source = graph.source;
+  if(!source) return;
   let table = new DijkstraHeap();
   data = graph.nodes.map(node => {
     if(equal_nodes(source , node)){
@@ -107,15 +108,15 @@ function setup() {
   create_drop_down();
 }
 function open_settings() {
-  settings_page.toggle_page();
+  settings_page.toggle_page();  
 }
 function create_drop_down() {
   background(200);
   sel = createSelect();
   sel.position(10, 10);
   sel.option('Dijkstra');
-  sel.option('kiwi');
-  sel.option('grape');
+  sel.option('placeholder');
+  sel.option('placeholder');
   sel.selected('Dijkstra');
   sel.changed(mySelectEvent);
   sel.position(width * 0.9 ,  height * 0.9);
@@ -154,8 +155,6 @@ function get_random_graph(nodes_count , directed) {
 }
 function mySelectEvent() {
   let item = sel.value();
-  background(200);
-  text('It is a ' + item + '!', 50, 50);
 }
 function handle_menu(node , action_selected , x , y) {
   if(!node) {
@@ -259,108 +258,97 @@ function draw() {
     settings_page.render();
     return;
   }
-  let x = 50;
-  let y = 50;
-  // curve(x , y , x + 100 , 30 , x + 200 , 30 , x + 300 , 50)
   draw_edges();
-  draw_curved_edges();
   draw_nodes(graph.nodes);
   buttons.map(button => button.render());
   if(input_form) input_form.render();
 }
-function draw_curved_edges() {
-  let cur = [[0 , 0] , [1 , 1] , [2 , 1] , [3 , 0]];
-  let x;
-  let y;
-  let scaled_curve = [];
-  for(let i = 0; i < 3; i++) {
-    cur[0]
-  }
-  // curve(curve[0][0] , curve[0][1] , curve[1][0] , curve[1][1])
+let draw_curved_edge = (x1 , y1 , x2 , y2 , weight) => {
+  let m = (y2 - y1) / (x2 - x1);
+  let perpend_m = -1 / m;
+  let mid_x = (x2 + x1) / 2;
+  let mid_y = (y2 + y1) / 2;  
+
+  let deg = Math.atan(perpend_m);
+
+  if(y1 > y2) deg += Math.PI;
+  // if(perpend_m < 0) deg += Math.PI
+  let cos_deg = cos(deg);
+  let sin_deg = sin(deg);
+  let xx = mid_x + (60) * cos_deg;
+  let yy = mid_y + (60) * sin_deg;
+  control_y = yy;
+  control_x = xx;
+  draw_pointer(control_x , control_y , x2 , y2 , node_dim / 2);
+
   noFill();
-  for(let i = 0; i < /*graph.nodes.length*/1; i++) {
-    for(let j = 0; j < /*graph.nodes[i].out.length*/1; j++) {
-      let intersection_point1 = line_circle_intersection(graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y , graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y , node_dim / 2);
-      let intersection_point2 = line_circle_intersection(graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y , graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y ,  node_dim / 2);
-      cur = cur.map(p => [p[0] * intersection_point1[2] * 10, p[1]]);
-      // console.log(intersection_point1);
-      // console.log(cur);
-      // curve(100 , 100 ,intersection_point1[0] , intersection_point1[1] , intersection_point2[0] , intersection_point2[1] , 300 , 300);
-    }
-  }
+  strokeWeight(1);
+  beginShape();
+  vertex(x1, y1);
+  quadraticVertex(control_x, control_y, x2, y2);
+  endShape();
+  if(settings_page.show_weights()) text(weight , mid_x + 40 * cos_deg , mid_y + 40 * sin_deg);
+
 }
-function draw_pointers() {
-  for(let i = 0; i < graph.nodes.length; i++) {
-    for(let j = 0; j < graph.nodes[i].out.length; j++) {
-      if(!graph.nodes[i].out[j].part_of_tree) continue;
-      let intersection_point = line_circle_intersection(graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y , graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y , node_dim / 2);
-      let tri = [[0 , 0] , [5 , -10] , [-5 , -10]];
-      let m = (graph.nodes[i].out[j].node_b.y - graph.nodes[i].out[j].node_a.y) / (graph.nodes[i].out[j].node_b.x - graph.nodes[i].out[j].node_a.x);
-      let deg = Math.atan(m) + Math.PI/2;
-      if(graph.nodes[i].out[j].node_a.y < graph.nodes[i].out[j].node_b.y) deg += Math.PI;
-      if(m < 0) deg += Math.PI
-      let cos_res = Math.cos(deg);
-      let sin_res = Math.sin(deg);
-      //rotate
-      let tx1 = cos_res * tri[0][0] - sin_res * tri[0][1];
-      let ty1 = sin_res * tri[0][0] + cos_res * tri[0][1];
-      let tx2 = cos_res * tri[1][0] - sin_res * tri[1][1];
-      let ty2 = sin_res * tri[1][0] + cos_res * tri[1][1];
-      let tx3 = cos_res * tri[2][0] - sin_res * tri[2][1];
-      let ty3 = sin_res * tri[2][0] + cos_res * tri[2][1];
-      tri[0][0] = tx1 
-      tri[0][1] = ty1 
-      tri[1][0] = tx2
-      tri[1][1] = ty2
-      tri[2][0] = tx3
-      tri[2][1] = ty3
+let draw_straight_edge = (x1 , y1 , x2 , y2 , weight) => {
+  line(x1 , y1 , x2 , y2);
+  if(settings_page.show_weights()) text(weight , (x1 + x2) / 2 , (y1 + y2) / 2);
+  // draw_pointer(x1 , y1 , x2 , y2 , node_dim / 2);
+
   
-      tri.map(vector => {vector[0] += intersection_point[0]; vector[1] += intersection_point[1];})
-  
-      fill(0);
-      triangle(tri[0][0] , tri[0][1] , tri[1][0] , tri[1][1] , tri[2][0] , tri[2][1]);
-    }
-  }
 }
-function draw_edges(edges) {
+function draw_pointer(x1 , y1 , x2 , y2 , r) {
+
+  let intersection_point = line_circle_intersection(x1 , y1 , x2 , y2 , r);
+  let tri = [[0 , 0] , [5 , -10] , [-5 , -10]];
+  let m = (y2- y1) / (x2 - x1);
+  let deg = Math.atan(m) + Math.PI/2;
+  if(y1 < y2) deg += Math.PI;
+  if(m < 0) deg += Math.PI
+  let cos_res = Math.cos(deg);
+  let sin_res = Math.sin(deg);
+  //rotate
+  let tx1 = cos_res * tri[0][0] - sin_res * tri[0][1];
+  let ty1 = sin_res * tri[0][0] + cos_res * tri[0][1];
+  let tx2 = cos_res * tri[1][0] - sin_res * tri[1][1];
+  let ty2 = sin_res * tri[1][0] + cos_res * tri[1][1];
+  let tx3 = cos_res * tri[2][0] - sin_res * tri[2][1];
+  let ty3 = sin_res * tri[2][0] + cos_res * tri[2][1];
+  tri[0][0] = tx1 
+  tri[0][1] = ty1 
+  tri[1][0] = tx2
+  tri[1][1] = ty2
+  tri[2][0] = tx3
+  tri[2][1] = ty3
+
+  tri.map(vector => {vector[0] += intersection_point[0]; vector[1] += intersection_point[1];})
+
   fill(0);
-  // for(let i = 0; i < edges.length; i++) {
-  //   if(edges[i].part_of_tree) {
-  //     line(edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y);
-  //     if(settings_page.show_weights()) text(edges[i].weight , ((edges[i].node_a.x + edges[i].node_b.x) / 2) , ((edges[i].node_a.y + edges[i].node_b.y) / 2));
-  //     // if(i == 0) {
-  //       // noFill();
-  //       // curve(50 , 40 , edges[i].node_a.x , edges[i].node_a.y , edges[i].node_b.x , edges[i].node_b.y ,50 ,50);
-  //     // }
-  //   }
-  // }
+  triangle(tri[0][0] , tri[0][1] , tri[1][0] , tri[1][1] , tri[2][0] , tri[2][1]);
+}
+function draw_edges() {
+  let draw_an_edge;
+  if(graph.directed) draw_an_edge = draw_curved_edge;
+  else draw_an_edge = draw_straight_edge;
+  fill(0);
   for(let i = 0; i < graph.nodes.length; i++) {
     for(let j = 0; j < graph.nodes[i].out.length; j++) {
-      // let edge = graph.nodes[i].out[j];
-      // let node = graph.nodes.find(n => n.find(e => {}))
-      // if(graph.nodes.find())
       if(!graph.nodes[i].out[j].part_of_tree) continue;
-      line(graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y , graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y);
-      if(settings_page.show_weights()) text(graph.nodes[i].out[j].weight , 
-                                          ((graph.nodes[i].out[j].node_a.x + graph.nodes[i].out[j].node_b.x) / 2) , 
-                                          ((graph.nodes[i].out[j].node_a.y + graph.nodes[i].out[j].node_b.y) / 2));
-      
+      draw_an_edge(graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y , graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y , graph.nodes[i].out[j].weight)
     }
   }
-  if(settings_page.show_arrows()) draw_pointers();
-  if(pending_edge_from) {
-    line(pending_edge_from.x , pending_edge_from.y , mouseX , mouseY);
-  }
+  if(pending_edge_from) draw_an_edge(pending_edge_from.x , pending_edge_from.y , mouseX , mouseY , "");
 }
+//The order of the two points matters
 function line_circle_intersection(x1 , y1 , x2 , y2 , r) {
   //https://stackoverflow.com/questions/6091728/line-segment-circle-intersection________________//|
   let m = (y2 - y1) / (x2 - x1);                                                                //|
   let c = y2 - m * x2;                                                                          //|
-  //                                                                                            //|
+                                                                                                //|
   let sec = (Math.sqrt(1 + Math.pow(m , 2)));                                                   //| 
   let res_x1 = x2 + r / sec;                                                                    //|
   let res_x2 = x2 + r / (sec * -1);                                                             //|
-  //                                                                                            //| 
+                                                                                                //| 
   let res_y1 = m * res_x1 + c;                                                                  //| 
   let res_y2 = m * res_x2 + c;                                                                  //|        
   //____________________________________________________________________________________________//|
@@ -387,13 +375,10 @@ function draw_nodes(nodes) {
 function mouseDragged() {
   if(input_form || menu_list) return;
   dragging = true;
-  let x = mouseX// - width/2;
-  let y =(mouseY)// - height/2) * -1;
   if(settings_page.current_page) return;
-  let node_on_move = graph.nodes.find(node => node.contains(x , y))
+  let node_on_move = graph.nodes.find(node => node.contains(mouseX , mouseY))
   if(node_on_move) {
-    // if(mouseX < width && mouseX > 0 && mouseY > 0 && mouseY < height)
-    node_on_move.change_pos(x , y);
+    node_on_move.change_pos(mouseX , mouseY);
   }
 }
 function mouseClicked() {
