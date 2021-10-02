@@ -1,4 +1,4 @@
-Github Pages link: https://bashirna yal.github.io/graphs/code/index.html
+Github Pages link: https://bashirnayal.github.io/graphs/code/index.html
 
 
 Quickly construct a graph and test a few things in mind
