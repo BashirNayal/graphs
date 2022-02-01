@@ -2,7 +2,6 @@ class Graph {
   constructor(nodes , edges) {
     this.nodes = nodes;
     this.edges = edges;
-    this.nodes_count = nodes.length;
     this.node_dim = 30;
     this.source = null;
     this.destination = null;
@@ -26,13 +25,12 @@ class Node {
     this.id = id;
     this.out = [];
     this.in = [];
+    this.visited = false;
   }
   equals(rhs) {
     if(typeof(rhs) != Node) {
-    console.log("here");
       return false;
   }
-    console.log("there");
     return this.x == rhs.x && this.y == rhs.y; 
   }
   change_pos(new_x , new_y) {

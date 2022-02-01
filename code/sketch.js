@@ -82,10 +82,6 @@ function print_table(table) {
     let cell_2 = (table.heap[i].distance == Number.MAX_SAFE_INTEGER ?
               "infinity" : table.heap[i].distance);
     let cell_3 = table.heap[i].previous.id;
-    cell_1 = 
-    // let cell_1_len = ;
-    // let cell_2_len = ;
-    // let cell_3_len = ;
 
     str += table.heap[i].vertex.id + "\t\t\t" + 
     (table.heap[i].distance == Number.MAX_SAFE_INTEGER ?
@@ -114,11 +110,19 @@ function setup() {
   graph = get_random_graph(10 , false);
 
   // dijkstra_algorithm(graph.nodes[0])
-  buttons.push(new Button(80 , 25 , width * 0.85 , height * 0.95 , "RUN" , dijkstra_algorithm));
+  buttons.push(new Button(80 , 25 , width * 0.85 , height * 0.95 , "RUN" , run_algorithm));
   buttons.push(new Button(80 , 25 , width * 0.64 , height * 0.95 , "SETTINGS" , open_settings));
   buttons.push(new Button(80 , 25 , width * 0.43 , height * 0.95 , "TOGGLE RES" , toggle_view));
 
   create_drop_down();
+}
+function run_algorithm() {
+  if (sel.value() == "Dijkstra") {
+    dijkstra_algorithm();
+  }
+  else if (sel.value() == "Has cycle") {
+    console.log(has_cycle());
+  }
 }
 function open_settings() {
   settings_page.toggle_page();  
@@ -128,7 +132,7 @@ function create_drop_down() {
   sel = createSelect();
   sel.position(10, 10);
   sel.option('Dijkstra');
-  sel.option('placeholder');
+  sel.option('Has cycle');
   sel.option('placeholder');
   sel.selected('Dijkstra');
   sel.changed(mySelectEvent);
@@ -238,10 +242,10 @@ function handle_menu(node , action_selected , x , y) {
   }
 }
 function equal_edges(edge1 , edge2) {
-  return edge1 && 
-         edge2 &&
-         equal_nodes(edge1.node_a , edge2.node_a) && 
-         equal_nodes(edge1.node_b , edge2.node_b);
+  return edge1                                   && 
+         edge2                                   &&
+         equal_nodes(edge1.node_a, edge2.node_a) && 
+         equal_nodes(edge1.node_b, edge2.node_b);
 }
 if (document.addEventListener) {
   document.addEventListener('contextmenu', function(e) {
@@ -281,7 +285,7 @@ if (document.addEventListener) {
       menu_list.option("add node");
       menu_list.option("clear");
       menu_list.changed(() => {
-                                handle_menu(null , menu_list.value()  , x , y);
+                                handle_menu(null, menu_list.value(), x, y);
                                 menu_list.remove();   
                                 menu_list = null;   
                                 pending_edge_from = null;
@@ -522,4 +526,42 @@ function valid_edge(edge) {
   }
   else {
   }
+}
+function get_neighbours(node) {
+  let neighbours = [];
+  for (let i = 0; i < node.out.length; i++) {
+    neighbours.push(node.out[i].node_b);
+  }
+  return neighbours;
+
+}
+function dfs_cycle_search(node, parent) {
+  node.visited = true;
+  let neighbours = get_neighbours(node);
+  for (let i = 0; i < neighbours.length; i++) {
+    if (!neighbours[i].visited) {
+      if (dfs_cycle_search(neighbours[i], node)) {
+        return true;
+      }
+    }
+    else if (!equal_nodes(neighbours[i], parent)) {
+      return true;
+    }
+  }
+  return false;
+  
+
+}
+function has_cycle() {
+  for (let i = 0; i < graph.nodes.length; i++) {
+    graph.nodes[i].visited = false;
+  }
+  for (let i = 0; i < graph.nodes.length; i++) {
+    if (!graph.nodes[i].visited) {
+      if (dfs_cycle_search(graph.nodes[i], null)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
