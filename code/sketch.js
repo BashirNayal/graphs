@@ -76,11 +76,24 @@ let dijkstra_algorithm = (source) => {
   return;
 }
 function print_table(table) {
-    let str = "ver    dis   pre     \n"
+    let str = "vertex\t\t\tdistance\t\tpredecessor\n";
   for(let i = 0; i < table.heap.length; i++) {
-    str += table.heap[i].vertex.id + "     " + table.heap[i].distance + "      " + table.heap[i].previous.id+  "      \n";
+    let cell_1 = table.heap[i].vertex.id;
+    let cell_2 = (table.heap[i].distance == Number.MAX_SAFE_INTEGER ?
+              "infinity" : table.heap[i].distance);
+    let cell_3 = table.heap[i].previous.id;
+    cell_1 = 
+    // let cell_1_len = ;
+    // let cell_2_len = ;
+    // let cell_3_len = ;
+
+    str += table.heap[i].vertex.id + "\t\t\t" + 
+    (table.heap[i].distance == Number.MAX_SAFE_INTEGER ?
+      "infinity" : table.heap[i].distance) +
+    "\t\t" + 
+    table.heap[i].previous.id + "\n";
   }
-  console.log(str)
+  console.log(str);
 }
 let toggle_view = () => {
   if(dijkstra_table && !graph_view) {
@@ -103,7 +116,7 @@ function setup() {
   // dijkstra_algorithm(graph.nodes[0])
   buttons.push(new Button(80 , 25 , width * 0.85 , height * 0.95 , "RUN" , dijkstra_algorithm));
   buttons.push(new Button(80 , 25 , width * 0.64 , height * 0.95 , "SETTINGS" , open_settings));
-  buttons.push(new Button(80 , 25 , width * 0.43 , height * 0.95 , "TOGGLE RES" , toggle_view))
+  buttons.push(new Button(80 , 25 , width * 0.43 , height * 0.95 , "TOGGLE RES" , toggle_view));
 
   create_drop_down();
 }
@@ -128,26 +141,36 @@ function get_random_graph(nodes_count , directed) {
   let max_y = height;
   let nodes = [];
   for(let i = 0; i < nodes_count; i++) {
-    let temp = new Node(Math.floor(Math.random() * (max_x - min_x) + min_x) , Math.floor(Math.random() * (max_y - min_y) + min_y) , namer.get_next());
+    let temp = 
+      new Node(Math.floor(Math.random() * 
+      (max_x - min_x) + min_x) , 
+      Math.floor(Math.random() * (max_y - min_y) + min_y) ,
+      namer.get_next());
     let found = nodes.find(node => node.contains(temp.x , temp.y));
     if(found) i--;
     else {
       nodes.push(temp);
-      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1)
+      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1);
     }
   }
   nodes.map(node => {
     for(let i = 0; i < Math.floor(Math.random() * 5 + 1); i++) {
       let next_neighbour = nodes[Math.floor(Math.random() * nodes_count)];
       if(node.out.find(e => equal_nodes(e.node_b , next_neighbour))) continue;
-      new_edge = new Edge(node , next_neighbour , Math.floor((Math.sqrt(Math.pow(node.x - next_neighbour.x, 2)) + (Math.pow(node.y - next_neighbour.y, 2))) / 100));
+      new_edge = new Edge(node , 
+                          next_neighbour , 
+                          Math.floor((Math.sqrt(Math.pow(node.x - next_neighbour.x, 2)) + 
+                          (Math.pow(node.y - next_neighbour.y, 2))) / 100));
       if(equal_nodes(new_edge.node_a , new_edge.node_b)) continue;
-      node.out.push(new_edge)
-      next_neighbour.in.push(new_edge)
+      node.out.push(new_edge);
+      next_neighbour.in.push(new_edge);
       if(!directed) {
-        new_edge_back = new Edge(next_neighbour , node , Math.floor((Math.sqrt(Math.pow(node.x - next_neighbour.x, 2)) + (Math.pow(node.y - next_neighbour.y, 2))) / 100));
-        node.in.push(new_edge_back)
-        next_neighbour.out.push(new_edge_back)
+        new_edge_back = new Edge(next_neighbour , 
+                                 node ,
+                                 Math.floor((Math.sqrt(Math.pow(node.x - next_neighbour.x, 2)) + 
+                                 (Math.pow(node.y - next_neighbour.y, 2))) / 100));
+        node.in.push(new_edge_back);
+        next_neighbour.out.push(new_edge_back);
       }
     }
   })
@@ -159,12 +182,13 @@ function mySelectEvent() {
 function handle_menu(node , action_selected , x , y) {
   if(!node) {
     if(action_selected == "new graph") {
+      namer.reset();
       graph = get_random_graph(10 , graph.directed);
       graph_updated();
     }
     if(action_selected == "add node") {
       let node = new Node(x , y , namer.get_next());
-      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1)
+      current_letter = String.fromCharCode(current_letter.charCodeAt(0) + 1);
       graph.add_node(node);
       graph_updated();
     }
@@ -175,12 +199,12 @@ function handle_menu(node , action_selected , x , y) {
   }
   if(action_selected == "delete") {
     for(let i = 0; i < node.in.length; i++) {
-      let edge = node.in[i]
+      let edge = node.in[i];
       let index = node.in[i].node_a.out.indexOf(edge);
       node.in[i].node_a.out.splice(index , 1);
     }
     for(let i = 0; i < node.out.length; i++) {
-      let edge = node.out[i]
+      let edge = node.out[i];
       let index = node.out[i].node_a.in.indexOf(edge);
       node.out[i].node_b.in.splice(index , 1);
     }
@@ -196,15 +220,17 @@ function handle_menu(node , action_selected , x , y) {
       graph.destination = node;
   }
   else if(action_selected == "source") {
-    if(graph.destination && equal_nodes(graph.destination , node)) 
-    graph.destination = null;
+    if(graph.destination && equal_nodes(graph.destination , node)) {
+      graph.destination = null;
+    }
     graph.source = node;
     graph_updated();
 
   }
   else if(action_selected == "reset") {
-    if(graph.destination && equal_nodes(graph.destination , node)) 
+    if(graph.destination && equal_nodes(graph.destination , node)) {
       graph.destination = null;
+    }
     else {
       graph.source = null;
       graph_updated();
@@ -212,7 +238,10 @@ function handle_menu(node , action_selected , x , y) {
   }
 }
 function equal_edges(edge1 , edge2) {
-  return edge1 && edge2 && equal_nodes(edge1.node_a , edge2.node_a) && equal_nodes(edge1.node_b , edge2.node_b);
+  return edge1 && 
+         edge2 &&
+         equal_nodes(edge1.node_a , edge2.node_a) && 
+         equal_nodes(edge1.node_b , edge2.node_b);
 }
 if (document.addEventListener) {
   document.addEventListener('contextmenu', function(e) {
@@ -235,7 +264,11 @@ if (document.addEventListener) {
       menu_list.option("destination");
       menu_list.option("delete");
       menu_list.option("reset")
-      menu_list.changed(() => {handle_menu(found_node , menu_list.value() , x , y); menu_list.remove(); menu_list = null; pending_edge_from = null});
+      menu_list.changed(() => {
+                                handle_menu(found_node , menu_list.value() , x , y);
+                                menu_list.remove(); menu_list = null; 
+                                pending_edge_from = null
+                              });
       menu_list.position(found_node.x, found_node.y)
     }
     else {
@@ -247,7 +280,12 @@ if (document.addEventListener) {
       menu_list.option("new graph");
       menu_list.option("add node");
       menu_list.option("clear");
-      menu_list.changed(() => {handle_menu(null , menu_list.value()  , x , y); menu_list.remove(); menu_list = null; pending_edge_from = null;});
+      menu_list.changed(() => {
+                                handle_menu(null , menu_list.value()  , x , y);
+                                menu_list.remove();   
+                                menu_list = null;   
+                                pending_edge_from = null;
+                              });
       menu_list.position(x, y)
     }
   }, false);
@@ -334,7 +372,11 @@ function draw_edges() {
   for(let i = 0; i < graph.nodes.length; i++) {
     for(let j = 0; j < graph.nodes[i].out.length; j++) {
       if(!graph.nodes[i].out[j].part_of_tree) continue;
-      draw_an_edge(graph.nodes[i].out[j].node_a.x , graph.nodes[i].out[j].node_a.y , graph.nodes[i].out[j].node_b.x , graph.nodes[i].out[j].node_b.y , graph.nodes[i].out[j].weight)
+      draw_an_edge(graph.nodes[i].out[j].node_a.x , 
+                   graph.nodes[i].out[j].node_a.y , 
+                   graph.nodes[i].out[j].node_b.x , 
+                   graph.nodes[i].out[j].node_b.y , 
+                   graph.nodes[i].out[j].weight)
     }
   }
   if(pending_edge_from) draw_an_edge(pending_edge_from.x , pending_edge_from.y , mouseX , mouseY , "");
@@ -394,15 +436,22 @@ function mouseClicked() {
   let clicked_button = buttons.find(button => button.contains(mouseX , mouseY));
   if(clicked_node) {
     if(pending_edge_from) {
-      if(equal_nodes(pending_edge_from , clicked_node) || clicked_node.in.find(e => equal_nodes(e.node_a , pending_edge_from))) {
+      if(equal_nodes(pending_edge_from , clicked_node) || 
+         clicked_node.in.find(e => equal_nodes(e.node_a , pending_edge_from))) {
         return;
       }
       //Add a check that ensures there is no outgoing edge to the same node
       let temp = pending_edge_from.edges.find(edge => equal_nodes(edge.node_b , clicked_node))
       if(temp) return;
-      let edge = new Edge(pending_edge_from , clicked_node , Math.floor((Math.sqrt(Math.pow(clicked_node.x - pending_edge_from.x, 2)) + (Math.pow(clicked_node.y - pending_edge_from.y, 2))) / 100))
+      let edge = new Edge(pending_edge_from , 
+                          clicked_node , 
+                          Math.floor((Math.sqrt(Math.pow(clicked_node.x - pending_edge_from.x, 2)) + 
+                          (Math.pow(clicked_node.y - pending_edge_from.y, 2))) / 100))
       if(!graph.directed) {
-        let edge_back = new Edge(clicked_node , pending_edge_from , Math.floor((Math.sqrt(Math.pow(clicked_node.x - pending_edge_from.x, 2)) + (Math.pow(clicked_node.y - pending_edge_from.y, 2))) / 100))
+        let edge_back = new Edge(clicked_node , 
+                                 pending_edge_from , 
+                                 Math.floor((Math.sqrt(Math.pow(clicked_node.x - pending_edge_from.x, 2)) + 
+                                 (Math.pow(clicked_node.y - pending_edge_from.y, 2))) / 100))
         pending_edge_from.in.push(edge_back);
         clicked_node.out.push(edge_back);
         graph_updated();
@@ -418,9 +467,15 @@ function mouseClicked() {
   else if(clicked_button) clicked_button.click();
   else if(pending_edge_from) {
     let node = new Node(mouseX , mouseY , namer.get_next());
-    let edge = new Edge(pending_edge_from , node , Math.floor((Math.sqrt(Math.pow(node.x - pending_edge_from.x, 2)) + (Math.pow(node.y - pending_edge_from.y, 2))) / 100));
+    let edge = new Edge(pending_edge_from , 
+                        node ,
+                        Math.floor((Math.sqrt(Math.pow(node.x - pending_edge_from.x, 2)) + 
+                        (Math.pow(node.y - pending_edge_from.y, 2))) / 100));
     if(!graph.directed) {
-      let edge_back = new Edge(node , pending_edge_from, Math.floor((Math.sqrt(Math.pow(node.x - pending_edge_from.x, 2)) + (Math.pow(node.y - pending_edge_from.y, 2))) / 100));
+      let edge_back = new Edge(node , 
+                               pending_edge_from, 
+                               Math.floor((Math.sqrt(Math.pow(node.x - pending_edge_from.x, 2)) + 
+                               (Math.pow(node.y - pending_edge_from.y, 2))) / 100));
       pending_edge_from.in.push(edge_back);
       node.out.push(edge_back);
       graph_updated();
