@@ -544,13 +544,11 @@ function dfs_cycle_search(node, parent) {
         return true;
       }
     }
-    else if (!equal_nodes(neighbours[i], parent)) {
+    else if (!equal_nodes(neighbours[i], parent) || graph.directed) {
       return true;
     }
   }
   return false;
-  
-
 }
 function has_cycle() {
   for (let i = 0; i < graph.nodes.length; i++) {
