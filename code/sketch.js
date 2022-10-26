@@ -43,7 +43,11 @@ let update_graph_with_dijkstra_results = (table) => {
 
 let dijkstra_algorithm = (source) => {
   if(!source) source = graph.source;
-  if(!source) return;
+  if(!source) {
+    //TODO: create show_warning function
+    // show_warning("Dijkstra need a source node to run");
+    return;
+  }
   let table = new DijkstraHeap();
   data = graph.nodes.map(node => {
     if(equal_nodes(source , node)){
@@ -102,10 +106,10 @@ let toggle_view = () => {
 }
 function setup() {
   frameRate(10);
-  resizeCanvas(720 , 720);
+  resizeCanvas(1080 , 960);
   background(124);
   stroke(0);
-  settings_page = new Settings([false , false , true]);
+  settings_page = new Settings([false , true , false]);
   namer = new NameGenerator();
   graph = get_random_graph(10 , false);
 
@@ -199,6 +203,7 @@ function handle_menu(node , action_selected , x , y) {
     if(action_selected == "clear") {
       graph = new Graph([] , []);
       namer.reset();
+      graph_updated();
     }
   }
   if(action_selected == "delete") {
@@ -335,7 +340,7 @@ let draw_curved_edge = (x1 , y1 , x2 , y2 , weight) => {
 let draw_straight_edge = (x1 , y1 , x2 , y2 , weight) => {
   line(x1 , y1 , x2 , y2);
   if(settings_page.show_weights()) text(weight , (x1 + x2) / 2 , (y1 + y2) / 2);
-  // draw_pointer(x1 , y1 , x2 , y2 , node_dim / 2);
+  if (settings_page.show_arrows())draw_pointer(x1 , y1 , x2 , y2 , node_dim / 2);
 
   
 }

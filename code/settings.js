@@ -1,6 +1,6 @@
 class Settings {
     constructor(vals) {
-        let attributes = ["DIRECTED" , "SHOW WEIGHTS" , "SHOW ARROWS"]
+        let attributes = ["DIRECTED" , "SHOW WEIGHTS" , "SHOW ARROWS", "TEST"]
         this.current_page = false;
         this.buttons = [];
         for(let i = 0; i < attributes.length; i++) {
