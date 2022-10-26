@@ -1,11 +1,11 @@
 class Graph {
-  constructor(nodes , edges) {
+  constructor(nodes , edges, directed) {
     this.nodes = nodes;
     this.edges = edges;
     this.node_dim = 30;
     this.source = null;
     this.destination = null;
-    this.directed = false;
+    this.directed = directed;
   }
   add_node(node) {
     this.nodes.push(node);
@@ -77,7 +77,6 @@ class Button {
       this.state = !this.state;
       return;
     }
-
     this.fun();
   }
   get_state() {
@@ -91,13 +90,13 @@ class Button {
     text(this.text , this.button_x  , this.button_y + 5, this.button_width , this.button_height)
   }
 }
+
 class NameGenerator {
   constructor() {
     this.current = "A";
     this.freed = [];
     this.maxed = false;
   }
-
   get_next() {
     if(this.freed.length > 0) return this.freed.pop();
     else if(!this.maxed) {
@@ -140,6 +139,4 @@ class NameGenerator {
   remove(name) {
     this.freed.push(name)
   }
-
-
 }

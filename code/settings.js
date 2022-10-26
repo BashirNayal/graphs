@@ -12,7 +12,8 @@ class Settings {
         this.current_page = !this.current_page;
         if(!this.current_page) {
             graph.directed = this.buttons[0].state;
-
+            // TODO:
+            // When switching from directed to not directed, re-generate a graph
         }
     }
     show_weights() {
